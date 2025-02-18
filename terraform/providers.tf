@@ -12,15 +12,3 @@ terraform {
     }
   }
 }
-
-# Configure GCP Provider
-provider "google" {
-  credentials = var.gcp_credentials  # From GitHub secret
-  project     = var.gcp_project      # From GitHub variable
-  region      = var.gcp_region
-}
-
-# Configure Cloudflare Provider
-provider "cloudflare" {
-  api_token = var.cloudflare_token  # From GitHub secret
-}
