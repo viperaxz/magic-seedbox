@@ -60,7 +60,6 @@ jobs:
           echo "${{ vars.SSH_PUBLIC_KEY }}" >> ~/.ssh/known_hosts
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan ${{ steps.vm-ip.outputs.ip }} >> ~/.ssh/known_hosts
 
       - name: Terraform Apply
         run: |
@@ -78,6 +77,10 @@ jobs:
         run: |
           cd terraform
           echo "ip=$(terraform output -raw vm_ip)" >> $GITHUB_OUTPUT
+
+      - name: Configure known_hosts
+        run: |
+          ssh-keyscan ${{ steps.vm-ip.outputs.ip }} >> ~/.ssh/known_hosts
 
 
         # Add after SSH setup
