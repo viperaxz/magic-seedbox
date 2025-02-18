@@ -25,14 +25,33 @@ jobs:
         run: |
           cd terraform
           terraform init
+      
+      - name: List Terraform Files
+        run: ls -la terraform/  # Verify credentials file exists
+        
+      - name: Validate Terraform Configuration
+        run: |
+          cd terraform
+          terraform validate
+          
+      - name: Validate GCP Credentials
+        run: |
+          cd terraform
+          printf '%s' '${{ secrets.GCP_SA_KEY }}' | base64 -d > gcp_credentials.json
+          gcloud auth activate-service-account --key-file=gcp_credentials.json
+          gcloud config set project ${{ vars.GCP_PROJECT }}
+          gcloud compute instances list --format=json
 
       - name: Terraform Apply
         run: |
           cd terraform
-          # Decode base64 credentials
-          echo '${{ secrets.GCP_SA_KEY }}' | base64 -d > gcp_credentials.json
+          # Fix credentials decoding
+          printf '%s' '${{ secrets.GCP_SA_KEY }}' | base64 -d > gcp_credentials.json
+          # Add validation check
+          if ! jq -e . gcp_credentials.json >/dev/null; then 
+            echo "âŒ Invalid GCP credentials JSON"; exit 1
+          fi
           terraform apply -auto-approve
-          rm -f gcp_credentials.json  # Cleanup credentials
         env:
           TF_VAR_gcp_project: '${{ vars.GCP_PROJECT }}'
           TF_VAR_cloudflare_token: '${{ secrets.CLOUDFLARE_API_TOKEN }}'
