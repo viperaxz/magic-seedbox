@@ -27,7 +27,7 @@ jobs:
       - name: Terraform Init
         run: |
           cd terraform
-          terraform init
+          terraform init -migrate-state  # Handle state migration
       
       - name: List Terraform Files
         run: ls -la terraform/  # Verify credentials file exists
@@ -60,6 +60,11 @@ jobs:
           echo "${{ vars.SSH_PUBLIC_KEY }}" >> ~/.ssh/known_hosts
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+        
+      - name: Cleanup Existing Resources
+        if: always()  # Runs even if previous steps fail
+        run: |
+          gcloud compute firewall-rules delete magic-seedbox-ports --quiet || true
 
       - name: Terraform Apply
         run: |
