@@ -1,7 +1,7 @@
-variable "gcp_credentials" {
-  description = "GCP Service Account JSON credentials"
+variable "gcp_credentials_file" {
+  description = "Path to decoded credentials file"
   type        = string
-  sensitive   = true
+  default     = "gcp_credentials.json"
 }
 
 variable "cloudflare_token" {

@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       domain:
-        description: 'Your base domain'
+        description: "Your base domain"
         required: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.5  # Explicit version
+          terraform_version: 1.5.5 # Explicit version
 
       - name: Terraform Init
         run: |
@@ -29,11 +29,13 @@ jobs:
       - name: Terraform Apply
         run: |
           cd terraform
+          # Decode base64 credentials
+          echo '${{ secrets.GCP_SA_KEY }}' | base64 -d > gcp_credentials.json
           terraform apply -auto-approve
+          rm -f gcp_credentials.json  # Cleanup credentials
         env:
-          TF_VAR_gcp_credentials: '${{ secrets.GCP_SA_KEY }}'
-          TF_VAR_cloudflare_token: '${{ secrets.CLOUDFLARE_API_TOKEN }}'
           TF_VAR_gcp_project: '${{ vars.GCP_PROJECT }}'
+          TF_VAR_cloudflare_token: '${{ secrets.CLOUDFLARE_API_TOKEN }}'
           TF_VAR_domain: '${{ inputs.domain }}'
 
       - name: Get VM IP
@@ -47,5 +49,5 @@ jobs:
           cd ..
           ./scripts/cloudflare-dns.sh ${{ steps.vm-ip.outputs.ip }} ${{ inputs.domain }}
         env:
-          CF_ZONE_ID: '${{ secrets.CF_ZONE_ID }}'
-          CLOUDFLARE_TOKEN: '${{ secrets.CLOUDFLARE_API_TOKEN }}'
+          CF_ZONE_ID: "${{ secrets.CF_ZONE_ID }}"
+          CLOUDFLARE_TOKEN: "${{ secrets.CLOUDFLARE_API_TOKEN }}"
