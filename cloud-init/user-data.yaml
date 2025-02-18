@@ -1,16 +1,38 @@
+# Updated cloud-init/user-data.yaml
 #cloud-config
 
 packages:
-  - docker.io
-  - curl
-  - gnupg
+- docker.io
+- curl
+- gnupg
 
 runcmd:
-  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
-  - mkdir -p /home/ubuntu/.kube
-  - cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config
-  - chown ubuntu:ubuntu /home/ubuntu/.kube/config
-  - export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-  - kubectl label node magic-seedbox ingress-ready=true
-  - helm repo add traefik https://helm.traefik.io/traefik
-  - helm repo update
+# Install k3s with Traefik disabled
+- curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
+
+# Install Helm
+- curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+# Configure kubeconfig for both root and ubuntu users
+- mkdir -p /home/ubuntu/.kube /root/.kube
+- cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config
+- cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
+- chown -R ubuntu:ubuntu /home/ubuntu/.kube
+
+# Wait for cluster to be ready
+- sleep 30
+- until kubectl get nodes; do sleep 5; done
+
+# Configure node labels using dynamic hostname
+- kubectl label node $(hostname) ingress-ready=true
+
+# Configure Helm repositories
+- helm repo add traefik https://helm.traefik.io/traefik
+- helm repo update
+
+# Add swap to prevent OOM issues on small instances
+- fallocate -l 1G /swapfile
+- chmod 600 /swapfile
+- mkswap /swapfile
+- swapon /swapfile
+- echo '/swapfile none swap sw 0 0' >> /etc/fstab

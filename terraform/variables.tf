@@ -31,3 +31,8 @@ variable "gcp_zone" {
   type        = string
   default     = "europe-west3-a"
 }
+
+variable "ssh_public_key" {
+  description = "SSH public key for VM access"
+  type        = string
+}

@@ -12,6 +12,7 @@ resource "google_compute_instance" "seedbox" {
 
   metadata = {
     user-data = file("${path.module}/../cloud-init/user-data.yaml")
+    ssh-keys  = "ubuntu:${var.ssh_public_key}"
   }
 
   network_interface {
@@ -28,7 +29,7 @@ resource "google_compute_firewall" "allow_ports" {
 
   allow {
     protocol = "tcp"
-    ports    = ["80", "443", "9090", "8080"]
+    ports    = ["22", "80", "443", "9090", "8080"]  # Added port 22
   }
 
   allow {
