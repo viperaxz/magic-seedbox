@@ -1,10 +1,12 @@
 variable "gcp_credentials" {
-  description = "GCP Service Account JSON (from environment secrets)"
+  description = "GCP Service Account JSON credentials"
+  type        = string
   sensitive   = true
 }
 
 variable "cloudflare_token" {
-  description = "Cloudflare API token (from environment secrets)"
+  description = "Cloudflare API token"
+  type        = string
   sensitive   = true
 }
 
