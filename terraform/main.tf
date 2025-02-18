@@ -1,13 +1,3 @@
-provider "google" {
-  credentials = var.gcp_credentials
-  project     = var.gcp_project
-  region      = var.gcp_region
-}
-
-provider "cloudflare" {
-  api_token = var.cloudflare_token
-}
-
 # Rest of your infrastructure code...
 resource "google_compute_instance" "seedbox" {
   name         = "magic-seedbox"
