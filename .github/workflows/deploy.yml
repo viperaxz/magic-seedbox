@@ -1,0 +1,46 @@
+name: Deploy Magic Seedbox
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'Your base domain'
+        required: true
+
+env:
+  GCP_REGION: europe-west3
+  GCP_ZONE: europe-west3-a
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init -chdir=terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -chdir=terraform
+        env:
+          TF_VAR_gcp_credentials: '${{ secrets.GCP_SA_KEY }}'
+          TF_VAR_cloudflare_token: '${{ secrets.CLOUDFLARE_API_TOKEN }}'
+          TF_VAR_gcp_project: '${{ vars.GCP_PROJECT }}' 
+          TF_VAR_domain: '${{ inputs.domain }}'
+
+      - name: Get VM IP
+        id: vm-ip
+        run: |
+          echo "ip=$(terraform -chdir=terraform output -raw vm_ip)" >> $GITHUB_OUTPUT
+
+      - name: Update DNS
+        run: ./scripts/cloudflare-dns.sh ${{ steps.vm-ip.outputs.ip }} ${{ inputs.domain }}
+        env:
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}  

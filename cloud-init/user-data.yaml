@@ -1,0 +1,16 @@
+#cloud-config
+
+packages:
+  - docker.io
+  - curl
+  - gnupg
+
+runcmd:
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
+  - mkdir -p /home/ubuntu/.kube
+  - cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config
+  - chown ubuntu:ubuntu /home/ubuntu/.kube/config
+  - export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+  - kubectl label node magic-seedbox ingress-ready=true
+  - helm repo add traefik https://helm.traefik.io/traefik
+  - helm repo update
