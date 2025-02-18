@@ -51,3 +51,11 @@ jobs:
         env:
           CF_ZONE_ID: "${{ secrets.CF_ZONE_ID }}"
           CLOUDFLARE_TOKEN: "${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          
+      - name: Destroy on Failure
+        if: failure()
+        run: |
+          cd terraform
+          terraform destroy -auto-approve
+        env:
+          TF_VAR_gcp_credentials_file: gcp_credentials.json
