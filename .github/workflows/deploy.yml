@@ -16,6 +16,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Dependencies
+        run: sudo apt-get install -y jq
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -33,11 +36,12 @@ jobs:
         run: |
           cd terraform
           terraform validate
-          
+
       - name: Validate GCP Credentials
         run: |
           cd terraform
           printf '%s' '${{ secrets.GCP_SA_KEY }}' | base64 -d > gcp_credentials.json
+          jq -e . gcp_credentials.json || (echo "Invalid JSON"; exit 1)
           gcloud auth activate-service-account --key-file=gcp_credentials.json
           gcloud config set project ${{ vars.GCP_PROJECT }}
           gcloud compute instances list --format=json
@@ -45,18 +49,17 @@ jobs:
       - name: Terraform Apply
         run: |
           cd terraform
-          # Fix credentials decoding
-          printf '%s' '${{ secrets.GCP_SA_KEY }}' | base64 -d > gcp_credentials.json
-          # Add validation check
-          if ! jq -e . gcp_credentials.json >/dev/null; then 
-            echo "âŒ Invalid GCP credentials JSON"; exit 1
-          fi
+          export TF_LOG=DEBUG
           terraform apply -auto-approve
         env:
-          TF_VAR_gcp_project: '${{ vars.GCP_PROJECT }}'
-          TF_VAR_cloudflare_token: '${{ secrets.CLOUDFLARE_API_TOKEN }}'
-          TF_VAR_domain: '${{ inputs.domain }}'
+          TF_VAR_gcp_project: "${{ vars.GCP_PROJECT }}"
+          TF_VAR_cloudflare_token: "${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          TF_VAR_domain: "${{ inputs.domain }}"
 
+      - name: Cleanup Credentials
+        if: always()
+        run: rm -f terraform/gcp_credentials.json
+      
       - name: Get VM IP
         id: vm-ip
         run: |
@@ -70,11 +73,14 @@ jobs:
         env:
           CF_ZONE_ID: "${{ secrets.CF_ZONE_ID }}"
           CLOUDFLARE_TOKEN: "${{ secrets.CLOUDFLARE_API_TOKEN }}"
-          
+
       - name: Destroy on Failure
         if: failure()
         run: |
           cd terraform
+          printf '%s' '${{ secrets.GCP_SA_KEY }}' | base64 -d > gcp_credentials.json
           terraform destroy -auto-approve
         env:
-          TF_VAR_gcp_credentials_file: gcp_credentials.json
+          TF_VAR_gcp_project: "${{ vars.GCP_PROJECT }}"
+          TF_VAR_cloudflare_token: "${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          TF_VAR_domain: "${{ inputs.domain }}"

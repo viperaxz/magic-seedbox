@@ -51,6 +51,15 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:magic-seedbox@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/compute.admin"
 
+# Grant service Account User role
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:magic-seedbox@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountUser"
+
+
+gcloud projects get-iam-policy $PROJECT_ID \
+  --filter="bindings.members:serviceAccount:magic-seedbox@$PROJECT_ID.iam.gserviceaccount.com"
+
 # Verify service account creation
 gcloud iam service-accounts list --project=$PROJECT_ID \
   --filter="displayName:magic-seedbox"
