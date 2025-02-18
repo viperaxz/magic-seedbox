@@ -37,6 +37,14 @@ jobs:
           cd terraform
           terraform validate
 
+      - name: Verify Script Exists
+        run: |
+          cd terraform/scripts
+          ls -ls
+          chmod +x cloudflare-dns.sh  # Force executable if needed
+          chmod +x kubeconfig.sh  # Force executable if needed
+          cd ..
+
       - name: Validate GCP Credentials
         run: |
           cd terraform
@@ -63,9 +71,16 @@ jobs:
           cd terraform
           echo "ip=$(terraform output -raw vm_ip)" >> $GITHUB_OUTPUT
 
+      - name: Verify Script Exists
+        run: |
+          cd terraform/scripts
+          ls -ls
+          chmod +x cloudflare-dns.sh  # Force executable if needed
+          chmod +x kubeconfig.sh  # Force executable if needed
+
       - name: Update DNS
         run: |
-          cd ..
+          cd terraform
           ./scripts/cloudflare-dns.sh ${{ steps.vm-ip.outputs.ip }} ${{ inputs.domain }}
         env:
           CF_ZONE_ID: "${{ secrets.CF_ZONE_ID }}"
