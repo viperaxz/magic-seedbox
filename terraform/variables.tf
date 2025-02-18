@@ -1,9 +1,3 @@
-variable "gcp_credentials" {
-  description = "GCP Service Account JSON credentials"
-  type        = string
-  sensitive   = true
-}
-
 variable "gcp_credentials_file" {
   description = "Path to decoded credentials file"
   type        = string

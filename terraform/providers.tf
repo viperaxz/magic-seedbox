@@ -13,11 +13,10 @@ terraform {
   }
 }
 
-# Provider configuration goes OUTSIDE the terraform block
 provider "google" {
   project     = var.gcp_project
   region      = var.gcp_region
-  credentials = var.gcp_credentials != "" ? var.gcp_credentials : file(var.gcp_credentials_file)
+  credentials = file(var.gcp_credentials_file) 
 }
 
 provider "cloudflare" {

@@ -55,10 +55,7 @@ jobs:
           TF_VAR_gcp_project: "${{ vars.GCP_PROJECT }}"
           TF_VAR_cloudflare_token: "${{ secrets.CLOUDFLARE_API_TOKEN }}"
           TF_VAR_domain: "${{ inputs.domain }}"
-
-      - name: Cleanup Credentials
-        if: always()
-        run: rm -f terraform/gcp_credentials.json
+          TF_VAR_gcp_credentials_file: "gcp_credentials.json"
       
       - name: Get VM IP
         id: vm-ip
@@ -84,3 +81,8 @@ jobs:
           TF_VAR_gcp_project: "${{ vars.GCP_PROJECT }}"
           TF_VAR_cloudflare_token: "${{ secrets.CLOUDFLARE_API_TOKEN }}"
           TF_VAR_domain: "${{ inputs.domain }}"
+          TF_VAR_gcp_credentials_file: "gcp_credentials.json"
+
+      - name: Cleanup Credentials
+        if: always()
+        run: rm -f terraform/gcp_credentials.json  # Now runs AFTER destroy
